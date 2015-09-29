@@ -130,7 +130,6 @@ public class Join extends Operator {
             t1 = null;
             child2.rewind();
         }
-
         return null;
     }
 

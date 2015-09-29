@@ -12,6 +12,9 @@ public class ChunkNestedLoopJoin extends Operator {
     private DbIterator child1, child2;
     private TupleDesc comboTD;
     private int chunkSize;
+    private Chunk currChunk = null;
+    private Tuple t1 = null;
+    private int i = 0;
 
     /**
      * Constructor. Accepts to children to join and the predicate to join them
@@ -47,6 +50,9 @@ public class ChunkNestedLoopJoin extends Operator {
      */
     public void open() throws DbException, NoSuchElementException,
             TransactionAbortedException {
+//        child1.open();
+//        child2.open();
+        super.open();
         // IMPLEMENT ME
     }
 
@@ -54,12 +60,18 @@ public class ChunkNestedLoopJoin extends Operator {
      * Closes the iterator.
      */
     public void close() {
+//        child1.close();
+//        child2.close();
+        super.close();
         // IMPLEMENT ME
     }
 
     public void rewind() throws DbException, TransactionAbortedException {
         child1.rewind();
         child2.rewind();
+        currChunk = null;
+        t1 = null;
+        i = 0;
     }
 
     /**
@@ -67,7 +79,11 @@ public class ChunkNestedLoopJoin extends Operator {
      */
     public Chunk getCurrentChunk() throws DbException, TransactionAbortedException {
         // IMPLEMENT ME
-        return null;
+        if (currChunk == null) {
+            currChunk = new Chunk(chunkSize);
+            fetchNextChunk();
+        }
+        return currChunk;
     }
  
     /**
@@ -75,7 +91,8 @@ public class ChunkNestedLoopJoin extends Operator {
      */
     protected Chunk fetchNextChunk() throws DbException, TransactionAbortedException {
         // IMPLEMENT ME
-        return null;
+        currChunk.loadChunk(child1);
+        return currChunk;
     }
 
     /**
@@ -96,6 +113,43 @@ public class ChunkNestedLoopJoin extends Operator {
      */
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
         // IMPLEMENT ME
+        // loop around child1
+        Tuple[] chunkTuples = getCurrentChunk().getChunkTuples();
+        while (chunkTuples[0] != null) {
+            while (t1 != null || i < chunkSize) {
+                if (t1 == null) {
+                    t1 = chunkTuples[i];
+                }
+
+                // loop around child2
+                while (child2.hasNext()) {
+                    Tuple t2 = child2.next();
+
+                    // if match, create a combined tuple and fill it with the values
+                    // from both tuples
+                    if (!pred.filter(t1, t2))
+                        continue;
+
+                    int td1n = t1.getTupleDesc().numFields();
+                    int td2n = t2.getTupleDesc().numFields();
+
+                    // set fields in combined tuple
+                    Tuple t = new Tuple(comboTD);
+                    for (int i = 0; i < td1n; i++)
+                        t.setField(i, t1.getField(i));
+                    for (int i = 0; i < td2n; i++)
+                        t.setField(td1n + i, t2.getField(i));
+                    return t;
+                }
+
+                // child2 is done: advance child1
+                t1 = null;
+                child2.rewind();
+                i++;
+            }
+            i = 0;
+            chunkTuples = fetchNextChunk().getChunkTuples();
+        }
         return null;
     }
 
