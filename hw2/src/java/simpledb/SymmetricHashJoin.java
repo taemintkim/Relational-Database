@@ -175,7 +175,7 @@ public class SymmetricHashJoin extends Operator {
      */
     private void switchRelations() throws TransactionAbortedException, DbException {
         // IMPLEMENT ME
-        System.out.println("Switched!");
+//        System.out.println("Switched!");
         switched = !switched;
 
         HashMap<Object, ArrayList<Tuple>> temp;
