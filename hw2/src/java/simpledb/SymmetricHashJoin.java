@@ -85,13 +85,13 @@ public class SymmetricHashJoin extends Operator {
      */
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
         // IMPLEMENT ME
-
         while (t1 != null || child1.hasNext() || child2.hasNext()) {
             if (t1 == null) {
+//                System.out.println("t1 is null!! " + switched);
+
                 if (!child1.hasNext()) {
                     switchRelations();
                 }
-                assert child1.hasNext();
                 t1 = child1.next();
                 insertLeft(t1);
             }
@@ -103,8 +103,9 @@ public class SymmetricHashJoin extends Operator {
                     t2Iterator = rightMap.get(key).iterator();
                 }
                 while (t2Iterator.hasNext()) {
+//                    System.out.println("iterator!");
                     Tuple t2 = t2Iterator.next();
-                    Tuple s1,s2;
+                    Tuple s1, s2;
                     if (switched) {
                         s1 = t2;
                         s2 = t1;
@@ -114,11 +115,9 @@ public class SymmetricHashJoin extends Operator {
                     }
                     return combine(s1, s2);
                 }
-            } else {
-                switchRelations();
+                t2Iterator = null;
             }
             t1 = null;
-            t2Iterator = null;
         }
         return null;
     }
@@ -148,7 +147,10 @@ public class SymmetricHashJoin extends Operator {
     private void insertLeft(Tuple tup) {
 //        System.out.println(tup);
         Object key = tup.getField(pred.getField1());
-        if (inLeft(tup)) {
+        if (inLeft(key)) {
+//            System.out.print(tup);
+//            System.out.println(leftMap.get(key).size());
+
             leftMap.get(key).add(tup);
         } else {
             ArrayList<Tuple> newArr = new ArrayList<Tuple>();
@@ -173,6 +175,7 @@ public class SymmetricHashJoin extends Operator {
      */
     private void switchRelations() throws TransactionAbortedException, DbException {
         // IMPLEMENT ME
+        System.out.println("Switched!");
         switched = !switched;
 
         HashMap<Object, ArrayList<Tuple>> temp;
