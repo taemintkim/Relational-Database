@@ -1,3 +1,4 @@
+//updated 10/16
 package org.apache.spark.sql.execution
 
 import java.io._
@@ -149,10 +150,11 @@ private[sql] class DiskPartition (
    */
   def closeInput() = {
     // IMPLEMENT ME //todo
-    inputClosed = true
     if (!writtenToDisk) {
       spillPartitionToDisk()
     }
+    outStream.close()
+    inputClosed = true
   }
 
 
