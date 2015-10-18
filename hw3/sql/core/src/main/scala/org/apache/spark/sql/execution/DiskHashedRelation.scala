@@ -200,9 +200,9 @@ private[sql] object DiskHashedRelation {
     }
 
     // val array_partitions : Array[DiskPartition] = hashed_partitions.toArray(size(array_partitions))
-    while (input.hasNext{
-      var new_row = keyGenerator.apply(input.next
-      Int hash = new.hashCode() % size
+    while (input.hasNext){
+      var new_row = keyGenerator.apply(input.next)
+      Int hash = new_row.hashCode() % size
       partition_obj = hashed_partitions.get(hash)
       partition_obj.insert(new_row)
     }
