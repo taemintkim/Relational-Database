@@ -1,4 +1,4 @@
-//updated 10/16
+//updated 10/18
 package org.apache.spark.sql.execution
 
 import java.io._
@@ -200,8 +200,8 @@ private[sql] object DiskHashedRelation {
     }
 
     // val array_partitions : Array[DiskPartition] = hashed_partitions.toArray(size(array_partitions))
-    while (input.hasNext()){
-      var new_row = keyGenerator.apply(input.next())
+    while (input.hasNext{
+      var new_row = keyGenerator.apply(input.next
       Int hash = new.hashCode() % size
       partition_obj = hashed_partitions.get(hash)
       partition_obj.insert(new_row)
@@ -209,7 +209,7 @@ private[sql] object DiskHashedRelation {
 
     // String[] foo = l.toArray(new String[foo.size()]);
     val array_partitions : Array[DiskPartition] = hashed_partitions.toArray()
-    val final_partitions = GeneralDiskHashedRelation(array_partitions)
+    val final_partitions = new GeneralDiskHashedRelation(array_partitions)
     final_partitions.closeAllPartitions()
     final_partitions
 
