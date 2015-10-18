@@ -191,6 +191,30 @@ private[sql] object DiskHashedRelation {
               size: Int = 64,
               blockSize: Int = 64000) = {
     // IMPLEMENT ME
-    null
+    val hashed_partitions: JavaArrayList[DiskPartition] = new JavaArrayList[DiskPartition]
+    // val hashed_partitions: Array[DiskPartition] = new Array[DiskPartition]
+    var i = 0
+    while (i < size){
+      var name = "file"+i.toString()
+      hashed_partitions.add(DiskPartition(name, blockSize))
+    }
+
+    // val array_partitions : Array[DiskPartition] = hashed_partitions.toArray(size(array_partitions))
+    while (input.hasNext()){
+      var new_row = keyGenerator.apply(input.next())
+      Int hash = new.hashCode() % size
+      partition_obj = hashed_partitions.get(hash)
+      partition_obj.insert(new_row)
+    }
+
+    // String[] foo = l.toArray(new String[foo.size()]);
+    val array_partitions : Array[DiskPartition] = hashed_partitions.toArray()
+    val final_partitions = GeneralDiskHashedRelation(array_partitions)
+    final_partitions.closeAllPartitions()
+    final_partitions
+
+  //   protected [sql] final class GeneralDiskHashedRelation(partitions: Array[DiskPartition])
+  // extends DiskHashedRelation with Serializable {
+
   }
 }
