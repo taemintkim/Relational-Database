@@ -220,10 +220,14 @@ private[sql] object DiskHashedRelation {
 //    println(f"the size of the first partition is ${hashed_partitions.get(0).data}")
     // String[] foo = l.toArray(new String[foo.size()]);
 //    val array_partitions : Array[DiskPartition] = hashed_partitions.toArray(new Array[DiskPartition](size))// turn the ArrayList of DiskPartiitons into an array
+
     val array_partitions : Array[DiskPartition] = hashed_partitions.toArray(new Array[DiskPartition](size))// turn the ArrayList of DiskPartiitons into an array
+    array_partitions.foreach((x: DiskPartition) => {
+      x.closeInput()
+    })
     val hashedRelation : GeneralDiskHashedRelation = new GeneralDiskHashedRelation(array_partitions)
     println(array_partitions(0).getData)
-    hashedRelation.closeAllPartitions()
+//    hashedRelation.closeAllPartitions()
     println("finished")
 
 //    val hashedRelation: DiskHashedRelation = DiskHashedRelation(data.iterator, keyGenerator, 3, 64000)
