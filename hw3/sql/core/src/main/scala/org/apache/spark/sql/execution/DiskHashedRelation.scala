@@ -1,4 +1,4 @@
-//updated 10/16
+//updated 10/18
 package org.apache.spark.sql.execution
 
 import java.io._
@@ -191,6 +191,31 @@ private[sql] object DiskHashedRelation {
               size: Int = 64,
               blockSize: Int = 64000) = {
     // IMPLEMENT ME
-    null
+    val hashed_partitions: JavaArrayList[DiskPartition] = new JavaArrayList[DiskPartition]
+    // val hashed_partitions: Array[DiskPartition] = new Array[DiskPartition]
+    var i = 0
+    while (i < size){
+      var name = "file"+i.toString()
+      hashed_partitions.add(new DiskPartition(name, blockSize))
+      i += 1
+    }
+
+    // val array_partitions : Array[DiskPartition] = hashed_partitions.toArray(size(array_partitions))
+    while (input.hasNext){
+      var new_row = keyGenerator.apply(input.next)
+      var hash_val = new_row.hashCode() % size
+      var partition_obj = hashed_partitions.get(hash_val)
+      partition_obj.insert(new_row)
+    }
+
+    // String[] foo = l.toArray(new String[foo.size()]);
+    val array_partitions : Array[DiskPartition] = hashed_partitions.toArray(new Array[DiskPartition](size))
+    val final_partitions = new GeneralDiskHashedRelation(array_partitions)
+    final_partitions.closeAllPartitions()
+    final_partitions
+
+  //   protected [sql] final class GeneralDiskHashedRelation(partitions: Array[DiskPartition])
+  // extends DiskHashedRelation with Serializable {
+
   }
 }
