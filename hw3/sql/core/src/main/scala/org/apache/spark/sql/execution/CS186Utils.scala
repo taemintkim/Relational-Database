@@ -206,9 +206,9 @@ object CachingIteratorGenerator {
         def next() = {
           // IMPLEMENT ME //
           val curr: Row = input.next.asInstanceOf[Row]
-          print(curr)
           var row_udf: Row = EmptyRow
           if (cache.containsKey(cacheKeyProjection(curr))) {
+            println("cache hit!")
              row_udf = cache.get(cacheKeyProjection(curr))
           } else {
             row_udf = udfProject.apply(curr)
