@@ -134,8 +134,9 @@ private[sql] class DiskPartition (
         }
         else if (chunkSizeIterator.hasNext){
           fetchNextChunk()
+        } else {
+          false
         }
-        false
       }
 
       /**
