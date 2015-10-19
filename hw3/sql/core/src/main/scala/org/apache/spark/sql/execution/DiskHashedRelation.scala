@@ -197,6 +197,7 @@ private[sql] object DiskHashedRelation {
     while (i < size){
       var name = "file"+i.toString()
       hashed_partitions.add(new DiskPartition(name, blockSize))
+      i += 1
     }
 
     // val array_partitions : Array[DiskPartition] = hashed_partitions.toArray(size(array_partitions))
