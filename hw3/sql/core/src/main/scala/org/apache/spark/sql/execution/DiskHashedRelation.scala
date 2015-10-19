@@ -1,4 +1,4 @@
-//updated 10/18
+//updated 10/18 7:01
 package org.apache.spark.sql.execution
 
 import java.io._
@@ -10,6 +10,7 @@ import org.apache.spark.sql.catalyst.expressions.{Projection, Row}
 import org.apache.spark.sql.execution.CS186Utils._
 
 import scala.collection.JavaConverters._
+
 
 /**
  * This trait represents a regular relation that is hash partitioned and spilled to
@@ -43,6 +44,7 @@ protected [sql] final class GeneralDiskHashedRelation(partitions: Array[DiskPart
 
   override def closeAllPartitions() = {
     // IMPLEMENT ME
+
   }
 }
 
@@ -191,28 +193,48 @@ private[sql] object DiskHashedRelation {
               size: Int = 64,
               blockSize: Int = 64000) = {
     // IMPLEMENT ME
+    println("begin")
     val hashed_partitions: JavaArrayList[DiskPartition] = new JavaArrayList[DiskPartition]
     // val hashed_partitions: Array[DiskPartition] = new Array[DiskPartition]
     var i = 0
     while (i < size){
       var name = "file"+i.toString()
-      hashed_partitions.add(new DiskPartition(name, blockSize))
+      val disk_partition = new DiskPartition(name, blockSize)
+      hashed_partitions.add(disk_partition) //create an array list with $size number DiskPartitions
       i += 1
     }
+    println(hashed_partitions.size()) //for debugging
 
-    // val array_partitions : Array[DiskPartition] = hashed_partitions.toArray(size(array_partitions))
-    while (input.hasNext){
-      var new_row = keyGenerator.apply(input.next)
-      var hash_val = new_row.hashCode() % size
-      var partition_obj = hashed_partitions.get(hash_val)
-      partition_obj.insert(new_row)
+
+    while (input.hasNext && input != null) {
+      var row = input.next
+      var row_keys = keyGenerator.apply(row)
+      var hash_val = row_keys.hashCode() % size
+      var partition_obj = hashed_partitions.get(hash_val) //get the DiskPartition pertaining to that hash value
+      partition_obj.insert(row) //insert the row into that partition
     }
 
+//    println(f"the size of the first partition is ${hashed_partitions.get(0).data}")
     // String[] foo = l.toArray(new String[foo.size()]);
-    val array_partitions : Array[DiskPartition] = hashed_partitions.toArray(new Array[DiskPartition](size))
-    val final_partitions = new GeneralDiskHashedRelation(array_partitions)
-    final_partitions.closeAllPartitions()
-    final_partitions
+//    val array_partitions : Array[DiskPartition] = hashed_partitions.toArray(new Array[DiskPartition](size))// turn the ArrayList of DiskPartiitons into an array
+    val array_partitions : Array[DiskPartition] = hashed_partitions.toArray(new Array[DiskPartition](size))// turn the ArrayList of DiskPartiitons into an array
+    val hashedRelation : GeneralDiskHashedRelation = new GeneralDiskHashedRelation(array_partitions)
+    println(array_partitions(0).getData)
+    hashedRelation.closeAllPartitions()
+    println("finished")
+
+//    val hashedRelation: DiskHashedRelation = DiskHashedRelation(data.iterator, keyGenerator, 3, 64000)
+//    var count: Int = 0
+//    for (partition <- hashedRelation.getIterator()) {
+//      for (row <- partition.getData()) {
+//        println(s"hashcode is ${row.hashCode() % 3}")
+//        println(s"the count is at ${count}")
+////        assert(row.hashCode() % 3 == count)
+//      }
+//      count += 1
+//    }
+
+    hashedRelation
 
   //   protected [sql] final class GeneralDiskHashedRelation(partitions: Array[DiskPartition])
   // extends DiskHashedRelation with Serializable {
