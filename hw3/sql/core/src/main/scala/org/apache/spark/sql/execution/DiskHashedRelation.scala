@@ -202,13 +202,13 @@ private[sql] object DiskHashedRelation {
     // val array_partitions : Array[DiskPartition] = hashed_partitions.toArray(size(array_partitions))
     while (input.hasNext){
       var new_row = keyGenerator.apply(input.next)
-      Int hash_val = new_row.hashCode() % size
+      var hash_val = new_row.hashCode() % size
       var partition_obj = hashed_partitions.get(hash_val)
       partition_obj.insert(new_row)
     }
 
     // String[] foo = l.toArray(new String[foo.size()]);
-    val array_partitions : Array[DiskPartition] = hashed_partitions.toArray()
+    val array_partitions : Array[DiskPartition] = hashed_partitions.toArray(new Array[DiskPartition](size))
     val final_partitions = new GeneralDiskHashedRelation(array_partitions)
     final_partitions.closeAllPartitions()
     final_partitions
