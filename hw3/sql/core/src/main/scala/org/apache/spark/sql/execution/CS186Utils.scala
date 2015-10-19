@@ -92,8 +92,8 @@ object CS186Utils {
    * @return
    */
   def getNewProjection(
-                      expressions: Seq[Expression],
-                      inputSchema: Seq[Attribute]) = new InterpretedProjection(expressions, inputSchema)
+                        expressions: Seq[Expression],
+                        inputSchema: Seq[Attribute]) = new InterpretedProjection(expressions, inputSchema)
 
 
   /**
@@ -105,8 +105,15 @@ object CS186Utils {
    * @return
    */
   def getUdfFromExpressions(expressions: Seq[Expression]): ScalaUdf = {
-    // IMPLEMENT ME
-    null
+    // IMPLEMENT ME todo task 3
+    val uiterator = expressions.reverseIterator
+    while (uiterator.hasNext) {
+      var curr = uiterator.next
+      if (curr.isInstanceOf[ScalaUdf]) {
+        return curr.asInstanceOf[ScalaUdf]
+      }
+    }
+    return null
   }
 
   /**
@@ -123,8 +130,8 @@ object CS186Utils {
    * @return
    */
   def generateCachingIterator(
-                                expressions: Seq[Expression],
-                                inputSchema: Seq[Attribute]): (Iterator[Row] => Iterator[Row]) = {
+                               expressions: Seq[Expression],
+                               inputSchema: Seq[Attribute]): (Iterator[Row] => Iterator[Row]) = {
     // Get the UDF from the expressions.
     val udf: ScalaUdf = CS186Utils.getUdfFromExpressions(expressions)
 
@@ -173,11 +180,11 @@ object CachingIteratorGenerator {
    * @return
    */
   def apply(
-               cacheKeys: Seq[Expression],
-               udf: ScalaUdf,
-               preUdfExpressions: Seq[Expression],
-               postUdfExpressions: Seq[Expression],
-               inputSchema: Seq[Attribute]): (Iterator[Row] => Iterator[Row]) = {
+             cacheKeys: Seq[Expression],
+             udf: ScalaUdf,
+             preUdfExpressions: Seq[Expression],
+             postUdfExpressions: Seq[Expression],
+             inputSchema: Seq[Attribute]): (Iterator[Row] => Iterator[Row]) = {
 
     { input =>
       new Iterator[Row] {
@@ -188,13 +195,28 @@ object CachingIteratorGenerator {
         val cache: JavaHashMap[Row, Row] = new JavaHashMap[Row, Row]()
 
         def hasNext() = {
-          // IMPLEMENT ME
-          false
+          // IMPLEMENT ME // todo task 3
+          if (input.hasNext) {
+            true
+          } else {
+            false
+          }
         }
 
         def next() = {
-          // IMPLEMENT ME
-          null
+          // IMPLEMENT ME //
+          val curr: Row = input.next.asInstanceOf[Row]
+          print(curr)
+          var row_udf: Row = EmptyRow
+          if (cache.containsKey(cacheKeyProjection(curr))) {
+             row_udf = cache.get(cacheKeyProjection(curr))
+          } else {
+            row_udf = udfProject.apply(curr)
+            cache.put(cacheKeyProjection(curr), row_udf)
+          }
+          val pre: Row = preUdfProjection(curr)
+          val post: Row = postUdfProjection(curr)
+          Row.fromSeq(pre++row_udf++post)
         }
       }
     }
