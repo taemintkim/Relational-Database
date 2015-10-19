@@ -1,3 +1,4 @@
+//updated 10/19
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -99,7 +100,9 @@ case class PartitionProject(projectList: Seq[Expression], child: SparkPlan) exte
     val keyGenerator = CS186Utils.getNewProjection(projectList, child.output)
 
     // IMPLEMENT ME
+
     val dhr: DiskHashedRelation = DiskHashedRelation(input, keyGenerator)
+
     val dhrIterator = dhr.getIterator()
     var partitionIterator: Iterator[Row] = dhrIterator.next().asInstanceOf[DiskPartition].getData()
     val cachedIterator: Iterator[Row] = CS186Utils.generateCachingIterator(projectList, child.output)(partitionIterator)

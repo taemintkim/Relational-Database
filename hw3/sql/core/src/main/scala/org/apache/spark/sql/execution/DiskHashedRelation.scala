@@ -1,4 +1,5 @@
-//updated 10/18 7:01
+//updated 10/19
+//passes task 1, 2, 3
 package org.apache.spark.sql.execution
 
 import java.io._
@@ -122,12 +123,19 @@ private[sql] class DiskPartition (
         if (!currentIterator.hasNext && chunkSizeIterator.hasNext) {
           fetchNextChunk()
         }
-        return currentIterator.next()
+        currentIterator.next()
       }
 
       override def hasNext(): Boolean = {
         // IMPLEMENT ME
-        return chunkSizeIterator.hasNext || currentIterator.hasNext
+
+        if (currentIterator.hasNext){
+          true
+        }
+        else if (chunkSizeIterator.hasNext){
+          fetchNextChunk()
+        }
+        false
       }
 
       /**
@@ -138,6 +146,9 @@ private[sql] class DiskPartition (
        */
       private[this] def fetchNextChunk(): Boolean = {
 //        IMPLEMENT ME //todo this is still sketch.
+        if (!chunkSizeIterator.hasNext){
+          false
+        }
         val chunkBytes = getNextChunkBytes(inStream, chunkSizeIterator.next().asInstanceOf[Int], getBytesFromList(data))
         currentIterator = getListFromBytes(chunkBytes).iterator.asScala
         return currentIterator.hasNext
@@ -154,7 +165,7 @@ private[sql] class DiskPartition (
    */
   def closeInput() = {
     // IMPLEMENT ME //todo
-    if (!writtenToDisk) {
+    if (data.size == 0) {
       spillPartitionToDisk()
     }
     outStream.close()
@@ -196,7 +207,6 @@ private[sql] object DiskHashedRelation {
               blockSize: Int = 64000) = {
     // IMPLEMENT ME
 
-    println("begin")
     val hashed_partitions: JavaArrayList[DiskPartition] = new JavaArrayList[DiskPartition]
     // val hashed_partitions: Array[DiskPartition] = new Array[DiskPartition]
     var i = 0
@@ -206,10 +216,9 @@ private[sql] object DiskHashedRelation {
       hashed_partitions.add(disk_partition) //create an array list with $size number DiskPartitions
       i += 1
     }
-    println(hashed_partitions.size()) //for debugging
-
 
     while (input.hasNext && input != null) {
+      // println("****entered****")
       var row = input.next
       var row_keys = keyGenerator(row)
       var hash_val = row_keys.hashCode % size
@@ -217,34 +226,16 @@ private[sql] object DiskHashedRelation {
       partition_obj.insert(row) //insert the row into that partition
     }
 
-//    println(f"the size of the first partition is ${hashed_partitions.get(0).data}")
-    // String[] foo = l.toArray(new String[foo.size()]);
-//    val array_partitions : Array[DiskPartition] = hashed_partitions.toArray(new Array[DiskPartition](size))// turn the ArrayList of DiskPartiitons into an array
-
     val array_partitions : Array[DiskPartition] = hashed_partitions.toArray(new Array[DiskPartition](size))// turn the ArrayList of DiskPartiitons into an array
     array_partitions.foreach((x: DiskPartition) => {
       x.closeInput()
     })
     val hashedRelation : GeneralDiskHashedRelation = new GeneralDiskHashedRelation(array_partitions)
-    println(array_partitions(0).getData)
-//    hashedRelation.closeAllPartitions()
-    println("finished")
+    // println(" the first item in array_partitions")
 
-//    val hashedRelation: DiskHashedRelation = DiskHashedRelation(data.iterator, keyGenerator, 3, 64000)
-//    var count: Int = 0
-//    for (partition <- hashedRelation.getIterator()) {
-//      for (row <- partition.getData()) {
-//        println(s"hashcode is ${row.hashCode() % 3}")
-//        println(s"the count is at ${count}")
-////        assert(row.hashCode() % 3 == count)
-//      }
-//      count += 1
-//    }
+    // print("what's in hashed_partitions? ")
+    // println(hashed_partitions.get(0).getData) //for debugging
 
     hashedRelation
-
-  //   protected [sql] final class GeneralDiskHashedRelation(partitions: Array[DiskPartition])
-  // extends DiskHashedRelation with Serializable {
-
   }
 }
