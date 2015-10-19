@@ -196,14 +196,14 @@ private[sql] object DiskHashedRelation {
     var i = 0
     while (i < size){
       var name = "file"+i.toString()
-      hashed_partitions.add(DiskPartition(name, blockSize))
+      hashed_partitions.add(new DiskPartition(name, blockSize))
     }
 
     // val array_partitions : Array[DiskPartition] = hashed_partitions.toArray(size(array_partitions))
     while (input.hasNext){
       var new_row = keyGenerator.apply(input.next)
-      Int hash = new_row.hashCode() % size
-      partition_obj = hashed_partitions.get(hash)
+      Int hash_val = new_row.hashCode() % size
+      var partition_obj = hashed_partitions.get(hash_val)
       partition_obj.insert(new_row)
     }
 
