@@ -39,12 +39,14 @@ protected [sql] final class GeneralDiskHashedRelation(partitions: Array[DiskPart
 
   override def getIterator() = {
     // IMPLEMENT ME
-    null
+    partitions.iterator
   }
 
   override def closeAllPartitions() = {
     // IMPLEMENT ME
-
+    partitions.foreach((x: DiskPartition) => {
+      x.closePartition();
+    })
   }
 }
 
@@ -193,6 +195,7 @@ private[sql] object DiskHashedRelation {
               size: Int = 64,
               blockSize: Int = 64000) = {
     // IMPLEMENT ME
+
     println("begin")
     val hashed_partitions: JavaArrayList[DiskPartition] = new JavaArrayList[DiskPartition]
     // val hashed_partitions: Array[DiskPartition] = new Array[DiskPartition]
@@ -208,8 +211,8 @@ private[sql] object DiskHashedRelation {
 
     while (input.hasNext && input != null) {
       var row = input.next
-      var row_keys = keyGenerator.apply(row)
-      var hash_val = row_keys.hashCode() % size
+      var row_keys = keyGenerator(row)
+      var hash_val = row_keys.hashCode % size
       var partition_obj = hashed_partitions.get(hash_val) //get the DiskPartition pertaining to that hash value
       partition_obj.insert(row) //insert the row into that partition
     }
