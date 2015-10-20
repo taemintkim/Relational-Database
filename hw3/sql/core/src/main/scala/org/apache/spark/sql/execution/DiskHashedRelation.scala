@@ -1,5 +1,4 @@
 //updated 10/19
-//passes task 1, 2, 3
 package org.apache.spark.sql.execution
 
 import java.io._
@@ -76,6 +75,7 @@ private[sql] class DiskPartition (
     data.add(row)
     if (measurePartitionSize() > blockSize) {
       spillPartitionToDisk()
+      data.clear()
     }
   }
 
@@ -120,23 +120,25 @@ private[sql] class DiskPartition (
 
       override def next(): Row = {
         // IMPLEMENT ME
-        if (!currentIterator.hasNext && chunkSizeIterator.hasNext) {
-          fetchNextChunk()
-        }
+        // if (!currentIterator.hasNext && chunkSizeIterator.hasNext) {
+        //   fetchNextChunk()
+        // }
         currentIterator.next()
       }
 
       override def hasNext(): Boolean = {
         // IMPLEMENT ME
-
+        var next = currentIterator.hasNext
         if (currentIterator.hasNext){
-          true
+          next = true
         }
-        else if (chunkSizeIterator.hasNext){
-          fetchNextChunk()
-        } else {
-          false
+        else {
+          next = chunkSizeIterator.hasNext
+          if (chunkSizeIterator.hasNext) {
+            fetchNextChunk() }
         }
+        next
+
       }
 
       /**
@@ -147,12 +149,25 @@ private[sql] class DiskPartition (
        */
       private[this] def fetchNextChunk(): Boolean = {
 //        IMPLEMENT ME //todo this is still sketch.
+        // val chunkBytes = getNextChunkBytes(inStream, chunkSizeIterator.next().asInstanceOf[Int], getBytesFromList(data))
         if (!chunkSizeIterator.hasNext){
+          return false
+        }
+
+        val chunkBytes = getNextChunkBytes(inStream, chunkSizeIterator.next(), getBytesFromList(data))
+        currentIterator = getListFromBytes(chunkBytes).iterator.asScala
+        if (chunkBytes.size == 0 || !chunkSizeIterator.hasNext){
           false
         }
-        val chunkBytes = getNextChunkBytes(inStream, chunkSizeIterator.next().asInstanceOf[Int], getBytesFromList(data))
-        currentIterator = getListFromBytes(chunkBytes).iterator.asScala
-        return currentIterator.hasNext
+        else{
+          true
+        }
+
+
+
+        // val chunkBytes = getNextChunkBytes(inStream, chunkSizeIterator.next().asInstanceOf[Int], getBytesFromList(data))
+        // currentIterator = getListFromBytes(chunkBytes).iterator.asScala
+        // return currentIterator.hasNext
       }
     }
   }
@@ -166,8 +181,9 @@ private[sql] class DiskPartition (
    */
   def closeInput() = {
     // IMPLEMENT ME //todo
-    if (data.size == 0) {
+    if (data.size != 0) {
       spillPartitionToDisk()
+      data.clear()
     }
     outStream.close()
     inputClosed = true
