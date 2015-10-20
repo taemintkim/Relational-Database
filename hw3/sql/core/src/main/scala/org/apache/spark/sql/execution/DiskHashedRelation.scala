@@ -73,9 +73,11 @@ private[sql] class DiskPartition (
     if (inputClosed) {
       throw new SparkException("input is closed!")
     }
+    writtenToDisk = false
     data.add(row)
     if (measurePartitionSize() > blockSize) {
       spillPartitionToDisk()
+      data.clear()
     }
   }
 
@@ -123,19 +125,17 @@ private[sql] class DiskPartition (
         if (!currentIterator.hasNext && chunkSizeIterator.hasNext) {
           fetchNextChunk()
         }
-        currentIterator.next()
+        val curr = currentIterator.next()
+//        print(curr)
+        return curr
       }
 
       override def hasNext(): Boolean = {
         // IMPLEMENT ME
-
-        if (currentIterator.hasNext){
-          true
-        }
-        else if (chunkSizeIterator.hasNext){
-          fetchNextChunk()
+        if (currentIterator.hasNext) {
+          return true
         } else {
-          false
+          return fetchNextChunk()
         }
       }
 
@@ -148,10 +148,11 @@ private[sql] class DiskPartition (
       private[this] def fetchNextChunk(): Boolean = {
 //        IMPLEMENT ME //todo this is still sketch.
         if (!chunkSizeIterator.hasNext){
-          false
+          return false
         }
-        val chunkBytes = getNextChunkBytes(inStream, chunkSizeIterator.next().asInstanceOf[Int], getBytesFromList(data))
-        currentIterator = getListFromBytes(chunkBytes).iterator.asScala
+        byteArray = getNextChunkBytes(inStream, chunkSizeIterator.next().asInstanceOf[Int], byteArray)
+        val bytelist = getListFromBytes(byteArray)
+        currentIterator = bytelist.iterator.asScala
         return currentIterator.hasNext
       }
     }
@@ -166,8 +167,9 @@ private[sql] class DiskPartition (
    */
   def closeInput() = {
     // IMPLEMENT ME //todo
-    if (data.size == 0) {
+    if (!writtenToDisk) { // this should not be related to data.size.
       spillPartitionToDisk()
+      data.clear()
     }
     outStream.close()
     inputClosed = true

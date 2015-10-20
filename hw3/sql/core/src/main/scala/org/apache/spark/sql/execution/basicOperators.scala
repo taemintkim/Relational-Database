@@ -110,12 +110,16 @@ case class PartitionProject(projectList: Seq[Expression], child: SparkPlan) exte
     new Iterator[Row] {
       def hasNext() = {
         // IMPLEMENT ME
-        dhrIterator.hasNext || cachedIterator.hasNext
+        if (cachedIterator.hasNext) {
+          true
+        } else {
+          fetchNextPartition()
+        }
       }
 
       def next() = {
         // IMPLEMENT ME
-        if (dhrIterator.hasNext && !cachedIterator.hasNext) {
+        if (dhrIterator.hasNext && !cachedIterator.hasNext) { //just in case
           fetchNextPartition()
         }
         cachedIterator.next()
@@ -133,8 +137,9 @@ case class PartitionProject(projectList: Seq[Expression], child: SparkPlan) exte
           var partitionIterator: Iterator[Row] = dhrIterator.next().asInstanceOf[DiskPartition].getData()
           val cachedIterator: Iterator[Row] = CS186Utils.generateCachingIterator(projectList, child.output)(partitionIterator)
           return true
+        } else {
+          return false
         }
-        false
       }
     }
   }
