@@ -125,7 +125,6 @@ private[sql] class DiskPartition (
           fetchNextChunk()
         }
         val curr = currentIterator.next()
-//        print(curr)
         return curr
       }
 

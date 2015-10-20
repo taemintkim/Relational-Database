@@ -102,10 +102,10 @@ case class PartitionProject(projectList: Seq[Expression], child: SparkPlan) exte
     // IMPLEMENT ME
 
     val dhr: DiskHashedRelation = DiskHashedRelation(input, keyGenerator)
-
-    val dhrIterator = dhr.getIterator()
+    val dhrIterator = dhr.getIterator() //Iterator[Partition]
     var partitionIterator: Iterator[Row] = dhrIterator.next().asInstanceOf[DiskPartition].getData()
-    val cachedIterator: Iterator[Row] = CS186Utils.generateCachingIterator(projectList, child.output)(partitionIterator)
+    var cachedIterator: Iterator[Row] = CS186Utils.generateCachingIterator(projectList, child.output)(partitionIterator)
+    //cachedIterator is a modified partitionIterator
 
     new Iterator[Row] {
       def hasNext() = {
@@ -119,10 +119,12 @@ case class PartitionProject(projectList: Seq[Expression], child: SparkPlan) exte
 
       def next() = {
         // IMPLEMENT ME
-        if (dhrIterator.hasNext && !cachedIterator.hasNext) { //just in case
+        while (dhrIterator.hasNext && !cachedIterator.hasNext) { //just in case
           fetchNextPartition()
         }
-        cachedIterator.next()
+        val result = cachedIterator.next()
+//        println(result)
+        result
       }
 
       /**
@@ -133,13 +135,14 @@ case class PartitionProject(projectList: Seq[Expression], child: SparkPlan) exte
        */
       private def fetchNextPartition(): Boolean  = {
         // IMPLEMENT ME
-        if (dhrIterator.hasNext) {
-          var partitionIterator: Iterator[Row] = dhrIterator.next().asInstanceOf[DiskPartition].getData()
-          val cachedIterator: Iterator[Row] = CS186Utils.generateCachingIterator(projectList, child.output)(partitionIterator)
-          return true
-        } else {
-          return false
+        while (dhrIterator.hasNext) {
+          partitionIterator = dhrIterator.next().asInstanceOf[DiskPartition].getData()
+          if (partitionIterator.hasNext) {
+            cachedIterator = CS186Utils.generateCachingIterator(projectList, child.output)(partitionIterator)
+            return true
+          }
         }
+        return false
       }
     }
   }
