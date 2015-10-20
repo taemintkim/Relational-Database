@@ -1,5 +1,4 @@
 //updated 10/19
-//passes task 1, 2, 3
 package org.apache.spark.sql.execution
 
 import java.io._
@@ -147,6 +146,7 @@ private[sql] class DiskPartition (
        */
       private[this] def fetchNextChunk(): Boolean = {
 //        IMPLEMENT ME //todo this is still sketch.
+        // val chunkBytes = getNextChunkBytes(inStream, chunkSizeIterator.next().asInstanceOf[Int], getBytesFromList(data))
         if (!chunkSizeIterator.hasNext){
           return false
         }
