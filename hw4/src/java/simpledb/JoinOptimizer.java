@@ -102,6 +102,9 @@ public class JoinOptimizer {
      */
     public double estimateJoinCost(LogicalJoinNode j, int card1, int card2,
             double cost1, double cost2) {
+        // joincost(t1 join t2) = scancost(t1) + ntups(t1) x scancost(t2) //IO cost
+        //                + ntups(t1) x ntups(t2)  //CPU cost
+
         if (j instanceof LogicalSubplanJoinNode) {
             // A LogicalSubplanJoinNode represents a subquery.
             // Don't worry about implementing a more sophisticated estimate than the one below.
@@ -109,8 +112,9 @@ public class JoinOptimizer {
         } else {
 
             // TODO: IMPLEMENT ME
+            return cost1 + card1 * cost2 + card1 * card2;
 
-            return -1.0;
+            // return -1.0;
         }
     }
 
@@ -157,6 +161,37 @@ public class JoinOptimizer {
         int card = 1;
 
         // TODO: IMPLEMENT ME
+        /*
+        For equality joins when there is no primary key, cardinality is
+        the size of the larger of the two tables.
+        */
+        if (joinOp == Predicate.Op.EQUALS){
+            if (!(t1pkey || t2pkey)){
+                return Math.max(card1, card2);
+            }
+            /* For equality joins, when one of the attributes is a primary key, 
+            the number of tuples produced by the join cannot be larger than the 
+            cardinality of the non-primary key attribute.
+            */
+            else{
+                if (t1pkey){
+                    return card2;
+                }
+                else if (t2pkey){
+                    return card1;
+                }
+            }
+        }
+        /*
+        For range scans, the size of the output should be proportional to the sizes of the inputs. 
+        It is fine to assume that a fixed fraction, 30%, 
+        of the cross-product is emitted by range scans. 
+        In general, the cost of a range join should be larger than the cost of 
+        a non-primary key equality join of two tables of the same size.
+        */
+        else{
+            return (int)(.30 * (card1 + card2));
+        }
 
         return card <= 0 ? 1 : card;
     }
