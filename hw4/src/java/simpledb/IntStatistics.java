@@ -87,9 +87,10 @@ public class IntStatistics {
         // col1 = col2 : RF = 1/MAX(NDistinct(T1), NDistinct(T2))
         // col > value : RF = (High(T)-value)/(High(T)-Low(T))
         // System.out.println("numDistinct " + numDistinct);
+
+
         // System.out.println("max val: " + maxVal);
         // System.out.println("min val: " + minVal);
-
 
         //edge cases
 
@@ -98,6 +99,8 @@ public class IntStatistics {
         double geq = 0.0;
         boolean gt_max = v > maxVal;
         boolean lt_min = v < minVal;
+        // System.out.println("the value of the boolean is " + gt_max);
+
 
 
         // List eq_tuples = new ArrayList();
@@ -116,8 +119,14 @@ public class IntStatistics {
         if (op == Predicate.Op.EQUALS){
             // System.out.println(numDistinct);
             // if (v > maxVal || v < minVal){return 0.0;}
+            if (gt_max || lt_min){
+                return 0.0;
+            }
             return eq_tuples;
         } else if (op == Predicate.Op.NOT_EQUALS){
+            if (gt_max || lt_min){
+                return 1.0;
+            }
             return (1 - eq_tuples);
         }
         else if (op == Predicate.Op.GREATER_THAN || op == Predicate.Op.GREATER_THAN_OR_EQ){
@@ -125,11 +134,17 @@ public class IntStatistics {
                 // System.out.println("value: " + v + ". maxvalue: " + maxVal);
                 return 0.0;
             }
+            if (lt_min){
+                return 1.0;
+            }
             // System.out.println("formula result: " + greater_tuples);
             return greater_tuples;
         } else if (op == Predicate.Op.LESS_THAN || op == Predicate.Op.LESS_THAN_OR_EQ){
             if (lt_min){
                 return 0.0;
+            }
+            if (gt_max){
+                return 1.0;
             }
             return (1-greater_tuples);
         }

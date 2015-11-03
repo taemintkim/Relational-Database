@@ -105,7 +105,7 @@ public class TableStats {
         // ArrayList<StringHistogram> histList = new ArrayList<StringHistogram>();
         // ArrayList<Object> list = new ArrayList<Object>();
 
-        
+
         // List<Object> info = new ArrayList <Object>();
 
         for (int i = 0; i < numFields; i++){
@@ -207,14 +207,14 @@ public class TableStats {
         //     or string field types!), 
         // estimate the selectivity of predicate field op constant on the table.
         if (tupleDesc.getFieldType(field) == Type.INT_TYPE){
-            IntStatistics estimate = info.get(field);
-            return estimate.estimateSelectivity(op, constant);
+            IntStatistics estimate = (IntStatistics)info.get(field);
+            return estimate.estimateSelectivity(op, ((IntField)constant).getValue());
         }
         else{
-            StringHistogram estimate = info.get(field);
-            return estimate.estimateSelectivity(op, constant);
+            StringHistogram estimate = (StringHistogram)info.get(field);
+            return estimate.estimateSelectivity(op, constant.toString());
         }
-        return 0.0;
+        // return 0.0;
 
     }
 

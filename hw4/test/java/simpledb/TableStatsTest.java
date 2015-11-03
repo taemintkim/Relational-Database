@@ -121,17 +121,19 @@ public class TableStatsTest extends SimpleDbTestBase {
 		TableStats s = new TableStats(this.tableId, IO_COST);
 		
 		for (int col = 0; col < 10; col++) {
+			// System.out.println("above max is : " + aboveMax);
+
 			Assert.assertEquals(0.0, s.estimateSelectivity(col, Predicate.Op.EQUALS, aboveMax), 0.001);			
 			Assert.assertEquals(1.0/320.0, s.estimateSelectivity(col, Predicate.Op.EQUALS, halfMaxMin), 0.015);
 			Assert.assertEquals(0, s.estimateSelectivity(col, Predicate.Op.EQUALS, belowMin), 0.001);
 
-			System.out.println("benchmark1");
+			// System.out.println("benchmark1");
 
 			Assert.assertEquals(1.0, s.estimateSelectivity(col, Predicate.Op.NOT_EQUALS, aboveMax), 0.001);
 			Assert.assertEquals(319.0/320.0, s.estimateSelectivity(col, Predicate.Op.NOT_EQUALS, halfMaxMin), 0.015);
 			Assert.assertEquals(1.0, s.estimateSelectivity(col, Predicate.Op.NOT_EQUALS, belowMin), 0.015);
 
-			System.out.println("benchmark2");
+			// System.out.println("benchmark2");
 
 			Assert.assertEquals(0.0, s.estimateSelectivity(col, Predicate.Op.GREATER_THAN, aboveMax), 0.001);
 			Assert.assertEquals(0.0, s.estimateSelectivity(col, Predicate.Op.GREATER_THAN, atMax), 0.001);
@@ -139,7 +141,7 @@ public class TableStatsTest extends SimpleDbTestBase {
 			Assert.assertEquals(31.0/32.0, s.estimateSelectivity(col, Predicate.Op.GREATER_THAN, atMin), 0.05);
 			Assert.assertEquals(1.0, s.estimateSelectivity(col, Predicate.Op.GREATER_THAN, belowMin), 0.001);
 			
-			System.out.println("benchmark3");
+			// System.out.println("benchmark3");
 
 
 			Assert.assertEquals(1.0, s.estimateSelectivity(col, Predicate.Op.LESS_THAN, aboveMax), 0.001);
@@ -148,7 +150,7 @@ public class TableStatsTest extends SimpleDbTestBase {
 			Assert.assertEquals(0.0, s.estimateSelectivity(col, Predicate.Op.LESS_THAN, atMin), 0.001);
 			Assert.assertEquals(0.0, s.estimateSelectivity(col, Predicate.Op.LESS_THAN, belowMin), 0.001);
 			
-			System.out.println("benchmark4");
+			// System.out.println("benchmark4");
 
 			Assert.assertEquals(0.0, s.estimateSelectivity(col, Predicate.Op.GREATER_THAN_OR_EQ, aboveMax), 0.001);
 			Assert.assertEquals(0.0, s.estimateSelectivity(col, Predicate.Op.GREATER_THAN_OR_EQ, atMax), 0.015);
@@ -156,7 +158,7 @@ public class TableStatsTest extends SimpleDbTestBase {
 			Assert.assertEquals(1.0, s.estimateSelectivity(col, Predicate.Op.GREATER_THAN_OR_EQ, atMin), 0.015);
 			Assert.assertEquals(1.0, s.estimateSelectivity(col, Predicate.Op.GREATER_THAN_OR_EQ, belowMin), 0.001);
 			
-			System.out.println("benchmark5");
+			// System.out.println("benchmark5");
 
 			Assert.assertEquals(1.0, s.estimateSelectivity(col, Predicate.Op.LESS_THAN_OR_EQ, aboveMax), 0.001);
 			Assert.assertEquals(1.0, s.estimateSelectivity(col, Predicate.Op.LESS_THAN_OR_EQ, atMax), 0.015);
@@ -164,7 +166,7 @@ public class TableStatsTest extends SimpleDbTestBase {
 			Assert.assertEquals(0.0, s.estimateSelectivity(col, Predicate.Op.LESS_THAN_OR_EQ, atMin), 0.05);
 			Assert.assertEquals(0.0, s.estimateSelectivity(col, Predicate.Op.LESS_THAN_OR_EQ, belowMin), 0.001);
 
-			System.out.println("benchmark6");
+			// System.out.println("benchmark6");
 
 		}
 	}
