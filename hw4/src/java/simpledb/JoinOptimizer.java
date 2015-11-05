@@ -251,7 +251,31 @@ public class JoinOptimizer {
         Vector<Double> planCosts = new Vector<>();
 
         // TODO: IMPLEMENT ME
-
+//        2. joinsLeft <- all the joins // joinsLeft represents which joins we haven't added to the plan yet
+        Vector<LogicalJoinNode> joinsLeft = new Vector<LogicalJoinNode>(joins);
+//        3. while ( |joinsLeft| > 0 ) { // continue until we've processed all joins
+        while (joinsLeft.size() > 0) {
+//        4.     cheapestJoin <- minimial cost join of all joins in joinsLeft
+            LogicalJoinNode cheapestJoin = null;
+            double cheapestCost = Double.MAX_VALUE;
+            int cardin = 0;
+            for (LogicalJoinNode j: joinsLeft) {
+                CostCard currcost = costGreedyJoin(j, plan, planCardinalities, planCosts, stats, filterSelectivities);
+                if (currcost != null && currcost.cost < cheapestCost) {
+                    cheapestJoin = j;
+                    cheapestCost = currcost.cost;
+                    cardin = currcost.card;
+                }
+            }
+//            5      add cheapestJoin to our plan
+            plan.add(cheapestJoin);
+//            6.     remove cheapestJoin from joinsLeft
+            joinsLeft.remove(cheapestJoin);
+//            7.     update whatever cardinality / costs computations we've kept track of so far
+            planCardinalities.add(cardin);
+            planCosts.add(cheapestCost);
+        }
+//            8. return plan
         return plan;
     }
 
