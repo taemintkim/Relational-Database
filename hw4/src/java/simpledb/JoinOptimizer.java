@@ -112,7 +112,7 @@ public class JoinOptimizer {
         } else {
 
             // TODO: IMPLEMENT ME
-            return cost1 + card1 * cost2 + card1 * card2;
+            return cost1 + (card1 * cost2) + (card1 * card2);
 
             // return -1.0;
         }
@@ -190,7 +190,8 @@ public class JoinOptimizer {
         a non-primary key equality join of two tables of the same size.
         */
         else{
-            return (int)(.30 * (card1 + card2));
+            double temp = (.30 * (card1*card2));
+            return (int) temp;
         }
 
         return card <= 0 ? 1 : card;
