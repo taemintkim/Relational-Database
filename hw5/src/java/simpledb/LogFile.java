@@ -439,6 +439,50 @@ public class LogFile {
             synchronized(this) {
                 preAppend();
                 // some code goes here
+                ArrayList<Page> before_imgs = new ArrayList<Page>();
+
+                // print();
+                long curr_offset = raf.getFilePointer();
+                long xact_offset = tidToFirstLogRecord.get(tid.getId()); //first log record offset                
+                raf.seek(xact_offset);
+                boolean cont = true;
+                while(cont){
+                    try{
+                        int cp_type = raf.readInt();
+                        long cp_tid = raf.readLong();
+                        System.out.println("tid: "+cp_tid);
+                        // if (cp_tid != tid.getId()){
+                        //     cont = false;
+                        // } 
+                        if (cp_type == UPDATE_RECORD){
+                            Page before = readPageData(raf);
+                            if (cp_tid == tid.getId()){
+                                before_imgs.add(before);
+
+                                //debugging
+                                System.out.println("ENTEREDDDD------" + cp_tid);
+                                
+                                Database.getCatalog().getDbFile(before.getId().getTableId()).writePage(before_imgs.get(0));
+                            }
+                            Page after = readPageData(raf);
+                        }
+                        else if (cp_type == CHECKPOINT_RECORD){
+                            int num_xact = raf.readInt();
+                            while (num_xact-- > 0) {
+                                raf.readLong();
+                                raf.readLong();
+                            }
+                         }
+                        long rec_offset = raf.readLong(); //always perform no matter what
+
+                        //debugging
+                        System.out.println("offset: "+rec_offset+"\n");
+                    }
+                    catch(EOFException e){
+                        break;
+                    }
+                }
+                raf.seek(curr_offset);
             }
         }
     }

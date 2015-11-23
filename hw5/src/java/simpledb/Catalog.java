@@ -111,6 +111,7 @@ public class Catalog {
      *     function passed to addTable
      */
     public DbFile getDbFile(int tableid) throws NoSuchElementException {
+        System.out.println("table id: " + tableid);
         return id2table.get(tableid);
     }
 
