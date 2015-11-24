@@ -440,8 +440,6 @@ public class LogFile {
                 preAppend();
                 // some code goes here
                 ArrayList<Page> before_imgs = new ArrayList<Page>();
-
-                // print();
                 long curr_offset = raf.getFilePointer();
                 long xact_offset = tidToFirstLogRecord.get(tid.getId()); //first log record offset                
                 raf.seek(xact_offset);
@@ -451,17 +449,10 @@ public class LogFile {
                         int cp_type = raf.readInt();
                         long cp_tid = raf.readLong();
                         System.out.println("tid: "+cp_tid);
-                        // if (cp_tid != tid.getId()){
-                        //     cont = false;
-                        // } 
                         if (cp_type == UPDATE_RECORD){
                             Page before = readPageData(raf);
                             if (cp_tid == tid.getId()){
                                 before_imgs.add(before);
-
-                                //debugging
-                                System.out.println("ENTEREDDDD------" + cp_tid);
-                                
                                 Database.getCatalog().getDbFile(before.getId().getTableId()).writePage(before_imgs.get(0));
                             }
                             Page after = readPageData(raf);
@@ -474,9 +465,6 @@ public class LogFile {
                             }
                          }
                         long rec_offset = raf.readLong(); //always perform no matter what
-
-                        //debugging
-                        System.out.println("offset: "+rec_offset+"\n");
                     }
                     catch(EOFException e){
                         break;
@@ -510,6 +498,63 @@ public class LogFile {
             synchronized (this) {
                 recoveryUndecided = false;
                 // some code goes here
+                ArrayList<Long> loser_xact = new ArrayList<Long>();
+                ArrayList<Long> winner_xact = new ArrayList<Long>();
+                ArrayList<Page> before_imgs = new ArrayList<Page>();
+                ArrayList<Long> all_tids = new ArrayList<Long>();
+                HashMap<Long,Long> first_updates = new HashMap<Long,Long>();
+
+
+                long curr_offset = raf.getFilePointer();
+                raf.seek(0);
+                long last_checkpt = raf.readLong();
+                if (last_checkpt == -1) {
+                    last_checkpt = 0;
+                }
+                raf.seek(last_checkpt);
+                while(true) {
+                    try{
+                        int cp_type = raf.readInt();
+                        long cp_tid = raf.readLong();
+                        all_tids.add(cp_tid);
+
+                        //implement REDO
+                        if (cp_type == UPDATE_RECORD) {
+                            readPageData(raf);
+                            Page after = readPageData(raf);
+                            Database.getCatalog().getDbFile(after.getId().getTableId()).writePage(after);
+                            long rec_offset = raf.readLong();
+                            first_updates.put(cp_tid, rec_offset);
+                        }
+
+                        if (cp_type == COMMIT_RECORD) {
+                            winner_xact.add(cp_tid);
+                            long rec_offset = raf.readLong();
+                        }
+
+                        if (cp_type == CHECKPOINT_RECORD){
+                            int num_xact = raf.readInt();
+                            while (num_xact-- > 0) {
+                                long xact_tid = raf.readLong();
+                                long xact_offset = raf.readLong();
+                            }   
+                            long rec_offset = raf.readLong();
+                        }
+
+                        //implement UNDO
+                        // long return_point = raf.getFilePointer();
+                        // for (int i = 0; i < all_tids.size(); i ++) {
+                        //     if ( !(winner_xact.contains(all_tids.get(i))) ) {
+                        //         rollback(all_tids.get(i));
+                        //     }
+                        // }
+                        // long rec_offset = raf.readLong();
+                    }
+                    catch (EOFException e) {
+                        break;
+                    }
+                }
+
             }
          }
     }
